@@ -13,6 +13,24 @@ type TavilyResponse = {
 }
 
 const TAVILY_API_URL = process.env.TAVILY_API_URL || "https://api.tavily.com/search"
+const VALID_TOPICS = new Set(["general", "news", "finance"])
+const VALID_DEPTHS = new Set(["basic", "advanced", "fast", "ultra-fast"])
+
+function getTopic() {
+  const topic = (process.env.TAVILY_TOPIC || "general").trim().toLowerCase()
+  return VALID_TOPICS.has(topic) ? topic : "general"
+}
+
+function getSearchDepth() {
+  const depth = (process.env.TAVILY_SEARCH_DEPTH || "basic").trim().toLowerCase()
+  return VALID_DEPTHS.has(depth) ? depth : "basic"
+}
+
+function getMaxResults() {
+  const parsed = Number(process.env.TAVILY_MAX_RESULTS || "5")
+  if (!Number.isFinite(parsed)) return 5
+  return Math.min(20, Math.max(1, Math.trunc(parsed)))
+}
 
 export async function searchWeb(query: string) {
   const apiKey = process.env.TAVILY_API_KEY
@@ -28,10 +46,10 @@ export async function searchWeb(query: string) {
     },
     body: JSON.stringify({
       query,
-      topic: process.env.TAVILY_TOPIC || "general",
-      max_results: Number(process.env.TAVILY_MAX_RESULTS || "5"),
+      topic: getTopic(),
+      max_results: getMaxResults(),
       include_answer: true,
-      search_depth: process.env.TAVILY_SEARCH_DEPTH || "basic",
+      search_depth: getSearchDepth(),
     }),
     cache: "no-store",
   })
@@ -46,7 +64,11 @@ export async function searchWeb(query: string) {
   }
 
   if (!res.ok) {
-    throw new Error((json as any)?.error || `Tavily API error (${res.status})`)
+    const details =
+      typeof (json as any)?.error === "string"
+        ? (json as any).error
+        : text.slice(0, 400)
+    throw new Error(`Tavily API error (${res.status}): ${details}`)
   }
 
   return json

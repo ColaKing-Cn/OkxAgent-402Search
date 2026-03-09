@@ -13,8 +13,8 @@ import { requestPaidAnswer } from "@/lib/request-paid-answer"
 type ChatMsg = { role: "user" | "assistant"; text: string }
 
 export function AIChatPanel({
-  title = "AI 助手",
-  description = "每次提问都会先走 HTTP 402，再通过钱包完成 x402 支付授权。",
+  title = "OpenClaw助手",
+  description = "让每个人都能体验到OpenClaw的强大功能",
   className,
 }: {
   title?: string
